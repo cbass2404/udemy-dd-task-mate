@@ -1,5 +1,7 @@
-import { ApolloServer, gql, IResolvers } from "apollo-server-micro";
+import { ApolloServer, gql } from "apollo-server-micro";
 import mysql from "serverless-mysql";
+import { OkPacket } from "mysql";
+import { Resolvers, TaskStatus } from "../../generated/graphql-backend";
 
 const typeDefs = gql`
   enum TaskStatus {
@@ -39,23 +41,50 @@ interface ApolloContext {
   db: mysql.ServerlessMysql;
 }
 
-const resolvers: IResolvers<any, ApolloContext> = {
+interface TaskDbRow {
+  id: number;
+  title: string;
+  task_status: TaskStatus;
+}
+
+type TasksDbQueryResult = TaskDbRow[];
+
+const resolvers: Resolvers<ApolloContext> = {
   Query: {
     async tasks(parent, args, context) {
-      const result = await context.db.query(
-        'SELECT "HELLO WORLD" as hello_world'
+      const { status } = args;
+      let query = "SELECT id, title, task_status FROM tasks";
+      const queryParams: string[] = [];
+      if (status) {
+        query += " WHERE task_status = ?";
+        queryParams.push(status);
+      }
+      const tasks = await context.db.query<TasksDbQueryResult>(
+        query,
+        queryParams
       );
       await db.end();
-      console.log({ result });
-      return [];
+      return tasks.map(({ id, title, task_status }) => ({
+        id,
+        title,
+        status: task_status,
+      }));
     },
     task(parent, args, context) {
       return null;
     },
   },
   Mutation: {
-    createTask(parent, args, context) {
-      return null;
+    async createTask(parent, args, context) {
+      const result = await context.db.query<OkPacket>(
+        "INSERT INTO tasks (title, task_status) VALUES(?, ?)",
+        [args.input.title, TaskStatus.Active]
+      );
+      return {
+        id: result.insertId,
+        title: args.input.title,
+        status: TaskStatus.Active,
+      };
     },
     updateTask(parent, args, context) {
       return null;
