@@ -1,5 +1,5 @@
 import { ApolloServer } from "apollo-server-micro";
-import mysql from "serverless-mysql";
+import { db } from "../../backend/db";
 import { schema } from "../../backend/schema";
 
 export const config = {
@@ -7,15 +7,6 @@ export const config = {
     bodyParser: false,
   },
 };
-
-const db = mysql({
-  config: {
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    database: process.env.MYSQL_DATABASE,
-    password: process.env.MYSQL_PASSWORD,
-  },
-});
 
 const apolloServer = new ApolloServer({ schema, context: { db } });
 
