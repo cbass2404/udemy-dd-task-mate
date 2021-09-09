@@ -1,7 +1,7 @@
-import { UserInputError } from "apollo-server-micro";
-import { OkPacket } from "mysql";
 import { Resolvers, TaskStatus } from "../generated/graphql-backend";
 import { ServerlessMysql } from "serverless-mysql";
+import { OkPacket } from "mysql";
+import { UserInputError } from "apollo-server-micro";
 
 interface ApolloContext {
   db: ServerlessMysql;
