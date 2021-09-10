@@ -1,6 +1,5 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import Error from "next/dist/pages/_error";
 import CreateTaskForm from "../components/CreateTaskForm";
 import TaskList from "../components/TaskList";
 import TaskFilter from "../components/TaskFilter";
@@ -14,6 +13,7 @@ import { initializeApollo } from "../lib/client";
 import { TaskStatus } from "../generated/graphql-backend";
 import { GetServerSideProps } from "next";
 import { useEffect, useRef } from "react";
+import Custom404 from "./404";
 
 const isTaskStatus = (value: string): value is TaskStatus =>
   Object.values(TaskStatus).includes(value as TaskStatus);
@@ -21,9 +21,11 @@ const isTaskStatus = (value: string): value is TaskStatus =>
 export default function Home() {
   const router = useRouter();
   const status =
-    typeof router.query.status === "string" ? router.query.status : undefined;
+    Array.isArray(router.query.status) && router.query.status.length
+      ? router.query.status[0]
+      : undefined;
   if (status !== undefined && !isTaskStatus(status)) {
-    return <Error statusCode={404} />;
+    return <Custom404 />;
   }
   const prevStatus = useRef(status);
   useEffect(() => {
